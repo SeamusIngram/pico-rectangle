@@ -75,7 +75,7 @@ GCReport getGCReport(GpioToButtonSets::F1::ButtonSet buttonSet) {
     if (vertical && horizontal) {
         if (bs.l || bs.r) {
             if (bs.mx == bs.my) xy = coords(0.7, readUp ? 0.7 : 0.6875);
-            else if (bs.mx) xy = coords(0.6375, 0.375);
+            else if (bs.mx) xy = coords(0.95, 0.2875);
             else xy = (banParasolDashing && readUp) ? coords(0.475, 0.875) : coords(0.5, 0.85);
         }
         else if (bs.b && (bs.mx != bs.my)) {
@@ -100,14 +100,14 @@ GCReport getGCReport(GpioToButtonSets::F1::ButtonSet buttonSet) {
                 else if (bs.cLeft) xy = coords(0.7875, 0.4875);
                 else if (bs.cUp) xy = coords(0.7, 0.5125);
                 else if (bs.cRight) xy = coords(0.6125, 0.525);
-                else xy = coords(0.7375, 0.3125);
+                else xy = coords(0.95, 0.2875);
             }
             else {
                 if (bs.cDown) xy = coords(0.3625, 0.7);
                 else if (bs.cLeft) xy = coords(0.4875, 0.7875);
                 else if (bs.cUp) xy = coords(0.5125, 0.7);
                 else if (bs.cRight) xy = coords(0.6375, 0.7625);
-                else xy = coords(0.3125, 0.7375);
+                else xy = coords(0.2875, 0.95);
             }
         }
         else xy = coords(0.7,0.7);
