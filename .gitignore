@@ -1,4 +1,5 @@
 build/*
+build2/*
 .vscode
 img/wfppBig.png
 runtime-remapping-examples
