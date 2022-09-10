@@ -84,8 +84,8 @@ int_Coords quantize(float dx,float dy,int_Coords xy,int_Coords target_point, flo
         y= xy.y+copysign(floor(abs(adjust_y)),adjust_y);
         if (copysign(floor(abs(adjust_y)),adjust_y) > 0) adjusted = true;
     }
-    if (adjusted && sqrt(pow(x,2)+pow(y,2))>80){
-        theta =  atan2(y,x);
+    if (adjusted && (x*x+y*y)>6400){
+        theta =  atan2f(y,x);
         if (abs(theta)>M_PI_4 && abs(theta)<3*M_PI_4) y -= copysign(1,y);
         else x -= copysign(1,x);
     }
@@ -126,14 +126,14 @@ int_Coords region_coords(int_Coords xy, uint8_t region){
 float angle_to_target(int_Coords xy,int_Coords target_point){
     float theta;
     if ((xy.x == 0 && target_point.x == 0) || (xy.y==0 && target_point.y==0)) theta = 0;
-    else theta = 2*asin(sqrt(pow(xy.x-target_point.x,2)+pow(xy.y-target_point.y,2))/(2*80.0));
+    else theta = acosf((12800 - ((xy.x-target_point.x)*(xy.x-target_point.x)+(xy.y-target_point.y)*(xy.y-target_point.y)))/12800.0);
   return theta;
 }
 
 int_Coords roll_to_new_point(int_Coords xy, float theta,float current_theta,float &dx_accum, float &dy_accum){
     int_Coords p;
-    float dx = 80.0*(cos(theta) - cos(current_theta));
-    float dy = 80*(sin(theta) - sin(current_theta));
+    float dx = 80.0*(cosf(theta) - cosf(current_theta));
+    float dy = 80*(sinf(theta) - sinf(current_theta));
     int_Coords target_p = {xy.x+int(dx),xy.y+int(dy)};
     p = quantize(dx,dy,xy,target_p,dx_accum,dy_accum);
     return p;
@@ -149,6 +149,8 @@ uint8_t v;
 float d;
 float dx;
 float dy;
+float dx_accum=0;
+float dy_accum=0;
 float theta;
 float new_theta;
 float d_theta;
@@ -163,8 +165,6 @@ bool roll_stick;
 bool adjacent_region;
 bool counter_clockwise;
 bool reset_hold =true;
-float dx_accum=0;
-float dy_accum=0;
 // 2 IP declarations
 bool left_wasPressed = false;
 bool right_wasPressed = false;
@@ -213,7 +213,7 @@ GCReport getGCReport(GpioToButtonSets::F1::ButtonSet buttonSet) {
     current_region = get_region(xy);
     target_region = get_region(target_point);
     adjacent_region = abs(target_region-current_region) <=1 ||  target_region + current_region == 9;
-    roll_stick = sqrt(pow(xy.x,2)+pow(xy.y,2))>=75&& adjacent_region;
+    roll_stick = (xy.x*xy.x+xy.y*xy.y)>=5625 && adjacent_region;
     if (no_direction) v=VEL_RETURN;
     else if (bs.mx) v=VEL_SLOW;
     else if (roll_stick) v=VEL_ROLL;
@@ -225,9 +225,9 @@ GCReport getGCReport(GpioToButtonSets::F1::ButtonSet buttonSet) {
         if(no_direction || !reset_hold){
             target_point = {0,0};
             d = VEL_RETURN*dt/10000.0;
-            theta = atan2(target_point.y-xy.y,target_point.x-xy.x);
-            dx = (target_point.x == xy.x) ? 0 : d*cos(theta);
-            dy = d*sin(theta);
+            theta = atan2f(target_point.y-xy.y,target_point.x-xy.x);
+            dx = (target_point.x == xy.x) ? 0 : d*cosf(theta);
+            dy = d*sinf(theta);
             new_point = quantize(dx,dy,xy,target_point,dx_accum,dy_accum);
             xy.x = new_point.x;
             xy.y = new_point.y;
@@ -237,7 +237,7 @@ GCReport getGCReport(GpioToButtonSets::F1::ButtonSet buttonSet) {
     else if (roll_stick){
         theta = d/(80.0);
         counter_clockwise = direction_of_change(xy,target_point,current_region);
-        current_theta = atan2(xy.y,xy.x);
+        current_theta = atan2f(xy.y,xy.x);
         new_theta = (counter_clockwise) ? current_theta + theta : current_theta - theta;
         if (new_theta > M_PI) new_theta -= 2*M_PI;
         else if (new_theta < -1*M_PI) new_theta += 2*M_PI; 
@@ -251,7 +251,7 @@ GCReport getGCReport(GpioToButtonSets::F1::ButtonSet buttonSet) {
             }
             else xy = roll_to_new_point(xy,new_theta,current_theta ,dx_accum,dy_accum);
         }
-        else if ((bs.my && bs.ms) && target_region%2==0 &&xy.y>target_point.y){
+        else if ((bs.l|| bs.r) && target_region%2==0 &&xy.y>target_point.y){
             target_point = region_coords({56,55},target_region);
             d_theta = angle_to_target(xy,target_point);
             if (theta >= abs(d_theta) || xy.x == target_point.x || xy.y == target_point.y){
@@ -270,11 +270,11 @@ GCReport getGCReport(GpioToButtonSets::F1::ButtonSet buttonSet) {
         }
     }
     else{
-        theta = atan2(target_point.y-xy.y,target_point.x-xy.x);
-        dx = (target_point.x == xy.x) ? 0 : d*cos(theta);
-        dy = d*sin(theta);
+        theta = atan2f(target_point.y-xy.y,target_point.x-xy.x);
+        dx = (target_point.x == xy.x) ? 0 : d*cosf(theta);
+        dy = d*sinf(theta);
         new_point = quantize(dx,dy,xy,target_point,dx_accum,dy_accum);
-        if (sqrt(pow(new_point.x,2)+pow(new_point.y,2))>82){
+        if ((new_point.x*new_point.x)+(new_point.y*new_point.y)>6724){
             xy.x = target_point.x;
             xy.y = target_point.y;
         }
