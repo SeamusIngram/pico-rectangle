@@ -6,6 +6,7 @@
 
 #include "global.hpp"
 
+#include "dac_algorithms/analog_press.hpp"
 #include "dac_algorithms/melee_F1.hpp"
 #include "dac_algorithms/project_plus_F1.hpp"
 #include "dac_algorithms/ultimate_F1.hpp"
@@ -95,7 +96,7 @@ int main() {
         }
         
         // Else: F1 / Melee
-        CommunicationProtocols::Joybus::enterMode(gcDataPin, [](){ return DACAlgorithms::MeleeF1::getGCReport(GpioToButtonSets::F1::defaultConversion()); });
+        CommunicationProtocols::Joybus::enterMode(gcDataPin, [](){ return DACAlgorithms::AnalogPress::getGCReport(GpioToButtonSets::F1::defaultConversion()); });
     }
 
     // Else:
@@ -147,6 +148,6 @@ int main() {
 
     // Default: F1 / melee / adapter
     USBConfigurations::GccToUsbAdapter::enterMode([](){
-        USBConfigurations::GccToUsbAdapter::actuateReportFromGCState(DACAlgorithms::MeleeF1::getGCReport(GpioToButtonSets::F1::defaultConversion()));
+        USBConfigurations::GccToUsbAdapter::actuateReportFromGCState(DACAlgorithms::AnalogPress::getGCReport(GpioToButtonSets::F1::defaultConversion()));
     });
 }

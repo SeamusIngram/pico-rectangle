@@ -21,6 +21,7 @@ add_executable(
   src/usb_configurations/hid_with_triggers.cpp
   src/usb_configurations/keyboard_8kro.cpp
   src/usb_configurations/wired_fight_pad_pro.cpp
+  src/dac_algorithms/analog_press.cpp
   src/dac_algorithms/melee_F1.cpp
   src/dac_algorithms/project_plus_F1.cpp
   src/dac_algorithms/ultimate_F1.cpp
@@ -39,4 +40,4 @@ add_custom_command(OUTPUT ${CMAKE_CURRENT_LIST_DIR}/generated/my_pio.pio.h
 
 target_link_libraries(pico_rectangle pico_stdlib hardware_pio pico_time pico_bootrom hardware_resets hardware_timer hardware_irq hardware_sync hardware_flash)
 
-pico_add_extra_outputs(pico_rectangle)
+pico_add_extra_outputs(pico_rectangle)  
