@@ -1,3 +1,7 @@
+### Fork Notes
+This is a fork of the pico-rectangle project implementing a more 'Analog-Like' Digital to Analog (DTA) control scheme called Analog Press. You can read about how it works [here](https://github.com/SeamusIngram/analog-press). Both the control scheme and the code implementation are **experimental**. I do not recommend playing serious matches on it. 
+### Compatibility
+It has been verified to work in the default GCC to USB adapter configuration, as well as in the Joybus configuration, with a Mayflash adapter. If you have additional hardware you would like to verify, please do! And if you have thoughts on DTA implementations, please let me know, or feel free to mess aroud with the code. The changes are exclusive to the *melee_F1.cpp* file. It is currently poorly optimized, so that is something contributors can help with as well (I have little experience with embedded programming, so this was my best attempt!)
 # Frame1/B0XX layout style public-source digital controller software for the Raspberry Pi Pico (v1.0)
 
 - [Legal information and license](#legalInformationAndLicense)
