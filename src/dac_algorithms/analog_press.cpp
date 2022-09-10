@@ -215,7 +215,7 @@ GCReport getGCReport(GpioToButtonSets::F1::ButtonSet buttonSet) {
     adjacent_region = abs(target_region-current_region) <=1 ||  target_region + current_region == 9;
     roll_stick = (xy.x*xy.x+xy.y*xy.y)>=5625 && adjacent_region;
     if (no_direction) v=VEL_RETURN;
-    else if (bs.mx) v=VEL_SLOW;
+    else if (bs.my) v=VEL_SLOW;
     else if (roll_stick) v=VEL_ROLL;
     else v=VEL_FAST;
     d = v*dt/10000.0;
@@ -241,7 +241,7 @@ GCReport getGCReport(GpioToButtonSets::F1::ButtonSet buttonSet) {
         new_theta = (counter_clockwise) ? current_theta + theta : current_theta - theta;
         if (new_theta > M_PI) new_theta -= 2*M_PI;
         else if (new_theta < -1*M_PI) new_theta += 2*M_PI; 
-        if (bs.my && current_region%2==0 && target_region%2==1){
+        if (bs.mx && current_region%2==0 && target_region%2==1){
             if (((current_region == 2 || current_region == 4) && target_region == 3) || ((current_region == 6 || current_region == 8) && target_region == 7)) target_point = region_coords({31,73},current_region);
             else target_point = region_coords({73,31},current_region);
             d_theta = angle_to_target(xy,target_point);
