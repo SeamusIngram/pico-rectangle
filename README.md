@@ -5,7 +5,16 @@ By default, the **notch**, **slow** and **hold** modifiers have been mapped to *
 ### Layout
 One thing to note for layouts is that **modifier keys and directional inputs should not be pressed with the same fingers**. There are situations where you will want to be pressing a direction along with at least one modifier. Therefore, it makes sense to put them on separate fingers. This is relevant because a common layout has medium shield and analog up both pressed by your right pinky, which is not ideal for this scheme. You might need to adjust your layout to find something more comfortable. Also note that you might want to hold **slow** and **hold** together, as well as **notch** and **hold**, so it's best not to have them pressed by the same finger, which is why the layout places **notch** and **slow** by your left thumb. It's not ideal to switch which modifier goes where (ie. don't swap your **slow** and **hold** buttons).
 ### Compatibility
-The firmware has been verified to work in the default GCC to USB adapter configuration, as well as in the Joybus configuration, with a Mayflash adapter. If you have additional hardware you would like to verify, please do! And if you have thoughts on DTA implementations, please let me know, or feel free to mess aroud with the code. The changes are exclusive to the *analog_press.cpp* file. All other files besides *main.cpp* are unchanged. In main, you can change the DacAlgorithms to AnalogPress to implement the control scheme.
+The firmware has been verified to work in the default GCC to USB adapter configuration, as an HID controller (though light shield does not work), and the Joybus configuration in Dolphin with a Mayflash adapter polling at 1000 Hz. If you have additional hardware you would like to verify, please do! And if you have thoughts on DTA implementations, please let me know, or feel free to mess aroud with the code. The changes are exclusive to the *analog_press.cpp* file. All other files besides *main.cpp* are unchanged. In *main*, you can change the DacAlgorithms from the current choice to AnalogPress to implement the control scheme.
+
+#### Hardware to Verify
+- Dolphin over Joybus from first party Nintendo adapter
+- Gamecube
+- Wii
+- Nintendo Switch using
+  - Wired Fight Pad Pro protocol
+  - GCC to USB adapter protocol
+  - Joybus configuration over Mayflash/Nintendo adapter
 # Frame1/B0XX layout style public-source digital controller software for the Raspberry Pi Pico (v1.0)
 
 - [Legal information and license](#legalInformationAndLicense)
@@ -271,10 +280,3 @@ Nothing but B/R works -> Did you connect pin 38 to ground ?
 
 Only half/some of my buttons do anything -> Double-check your common ground between all of your buttons.
 
-<a name="contact"/>
-
-### Contact
-
-Discord: Arte#9281
-
-Twitter: https://twitter.com/SSBM_Arte
