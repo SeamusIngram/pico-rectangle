@@ -25,6 +25,7 @@ struct int_Coords {
     int y;
 };
 
+// button press combinations result in the cursor moving from its current position to the target
 int_Coords target(bool left,bool right,bool up, bool down){
     int_Coords xy;
     if (left && up) xy = {-56,56}; 
@@ -39,6 +40,9 @@ int_Coords target(bool left,bool right,bool up, bool down){
     return xy;
 }
 
+// The coordinate circle is divided into 9 regions. Needed for logic when rolling stick
+// 4 Cardinals, 4 diagonals and the center
+// Ordered starting at 1 from the East cardinal, and increasing counterclockwise. the center is -1.
 uint8_t get_region(int_Coords p){
     uint8_t region;
     if (p.x >= 23){
@@ -59,6 +63,9 @@ uint8_t get_region(int_Coords p){
     return region;
 }
 
+// Can only send integers 0-255 as result, so need to truncate final value for report
+// Save truncation and accumulate, because there are situations when dx or dy < 1
+// If there was no accumulation, cursor would get stuck
 int_Coords quantize(float dx,float dy,int_Coords xy,int_Coords target_point, float &dx_accum, float &dy_accum){
     int x,y;
     bool adjusted = false;
@@ -93,6 +100,7 @@ int_Coords quantize(float dx,float dy,int_Coords xy,int_Coords target_point, flo
     return p;
 }
 
+// Determine if the cursor should be moving cw or ccw when rolling
 bool direction_of_change(int_Coords xy, int_Coords target_point, uint8_t region){
     bool counter_clockwise;
     if (region == 1 || region == 2 || region == 8) counter_clockwise = xy.y < target_point.y; 
@@ -102,6 +110,7 @@ bool direction_of_change(int_Coords xy, int_Coords target_point, uint8_t region)
     return counter_clockwise;
 }
 
+// Convert target coords to appropriate quadrant
 int_Coords region_coords(int_Coords xy, uint8_t region){
     int_Coords p;
     switch (region){
@@ -123,6 +132,7 @@ int_Coords region_coords(int_Coords xy, uint8_t region){
     return p;
 }
 
+// Find central angle between two points on circle
 float angle_to_target(int_Coords xy,int_Coords target_point){
     float theta;
     if ((xy.x == 0 && target_point.x == 0) || (xy.y==0 && target_point.y==0)) theta = 0;
@@ -130,6 +140,7 @@ float angle_to_target(int_Coords xy,int_Coords target_point){
   return theta;
 }
 
+// Given an angle travelled, determine coordinates of new point
 int_Coords roll_to_new_point(int_Coords xy, float theta,float current_theta,float &dx_accum, float &dy_accum){
     int_Coords p;
     float dx = 80.0*(cosf(theta) - cosf(current_theta));
@@ -206,7 +217,7 @@ GCReport getGCReport(GpioToButtonSets::F1::ButtonSet buttonSet) {
     /* Stick */
 
     bool readUp = bs.up;
-    //Analog Press Code
+    //Start Analog Press
     dt = time_us_32() - t;
     target_point = target(bs.left,bs.right,bs.up,bs.down);
     no_direction = !bs.left && !bs.right && !bs.up && !bs.down;
@@ -220,10 +231,14 @@ GCReport getGCReport(GpioToButtonSets::F1::ButtonSet buttonSet) {
     else v=VEL_FAST;
     d = v*dt/10000.0;
     if (!bs.ms) reset_hold=true;
-
+    // Holding
     if (bs.ms){
+        // Return to origin if all buttons released. Stays fix until hold is then released
         if(no_direction || !reset_hold){
             target_point = {0,0};
+            // 10000 because velocity is units/10ms and t is in us
+            // used units/10ms because I wanted to avoid v being decimals 
+            // eg. V_SlOW is 5, which represents 0.5 units/ms. Didn't want to store as 0.5
             d = VEL_RETURN*dt/10000.0;
             theta = atan2f(target_point.y-xy.y,target_point.x-xy.x);
             dx = (target_point.x == xy.x) ? 0 : d*cosf(theta);
@@ -234,15 +249,19 @@ GCReport getGCReport(GpioToButtonSets::F1::ButtonSet buttonSet) {
             reset_hold= false;
         }
     }
+    // Rollling
     else if (roll_stick){
         theta = d/(80.0);
         counter_clockwise = direction_of_change(xy,target_point,current_region);
         current_theta = atan2f(xy.y,xy.x);
         new_theta = (counter_clockwise) ? current_theta + theta : current_theta - theta;
         if (new_theta > M_PI) new_theta -= 2*M_PI;
-        else if (new_theta < -1*M_PI) new_theta += 2*M_PI; 
+        else if (new_theta < -1*M_PI) new_theta += 2*M_PI;
+        // Notches 
         if (bs.mx && current_region%2==0 && target_region%2==1){
+            // Vertical
             if (((current_region == 2 || current_region == 4) && target_region == 3) || ((current_region == 6 || current_region == 8) && target_region == 7)) target_point = region_coords({31,73},current_region);
+            // Horizontal
             else target_point = region_coords({73,31},current_region);
             d_theta = angle_to_target(xy,target_point);
             if (theta >= abs(d_theta) || xy.x == target_point.x || xy.y == target_point.y){
@@ -251,7 +270,8 @@ GCReport getGCReport(GpioToButtonSets::F1::ButtonSet buttonSet) {
             }
             else xy = roll_to_new_point(xy,new_theta,current_theta ,dx_accum,dy_accum);
         }
-        else if ((bs.l|| bs.r) && target_region%2==0 &&xy.y>target_point.y){
+        // Shield Drop
+        else if ((bs.l|| bs.r || bs.ls) && target_region%2==0 &&xy.y>target_point.y){
             target_point = region_coords({56,55},target_region);
             d_theta = angle_to_target(xy,target_point);
             if (theta >= abs(d_theta) || xy.x == target_point.x || xy.y == target_point.y){
@@ -260,6 +280,7 @@ GCReport getGCReport(GpioToButtonSets::F1::ButtonSet buttonSet) {
             }
             else xy = roll_to_new_point(xy,new_theta,current_theta ,dx_accum,dy_accum);
         }
+        // Roll to default coordinate
         else{
             d_theta = angle_to_target(xy,target_point);
             if (theta >= abs(d_theta) || xy.x == target_point.x || xy.y == target_point.y){
@@ -269,6 +290,8 @@ GCReport getGCReport(GpioToButtonSets::F1::ButtonSet buttonSet) {
             else xy = roll_to_new_point(xy,new_theta,current_theta ,dx_accum,dy_accum);
         }
     }
+    // Default
+    // Move from current position to target in a straight line
     else{
         theta = atan2f(target_point.y-xy.y,target_point.x-xy.x);
         dx = (target_point.x == xy.x) ? 0 : d*cosf(theta);

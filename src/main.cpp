@@ -103,7 +103,7 @@ int main() {
 
     // 27 - GP21 - X - Melee / HID
     if (!gpio_get(21)) USBConfigurations::HidWithTriggers::enterMode([](){
-        USBConfigurations::HidWithTriggers::actuateReportFromGCState(DACAlgorithms::MeleeF1::getGCReport(GpioToButtonSets::F1::defaultConversion()));
+        USBConfigurations::HidWithTriggers::actuateReportFromGCState(DACAlgorithms::AnalogPress::getGCReport(GpioToButtonSets::F1::defaultConversion()));
     });
 
     // 29 - GP22 - Y - Ult / HID
@@ -133,7 +133,7 @@ int main() {
 
     // 7 - GP5 - L: F1 / melee / wired_fight_pad_pro
     if (!gpio_get(5)) USBConfigurations::WiredFightPadPro::enterMode([](){
-        USBConfigurations::WiredFightPadPro::actuateReportFromGCState(DACAlgorithms::MeleeF1::getGCReport(GpioToButtonSets::F1::defaultConversion()));
+        USBConfigurations::WiredFightPadPro::actuateReportFromGCState(DACAlgorithms::AnalogPress::getGCReport(GpioToButtonSets::F1::defaultConversion()));
     });
 
     // 6 - GP4 - Left: F1 / wired_fight_pad_pro_default / wired_fight_pad_pro
