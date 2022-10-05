@@ -350,6 +350,7 @@ GCReport getGCReport(GpioToButtonSets::F1::ButtonSet buttonSet) {
     gcReport.l = bs.l;
     gcReport.r = bs.r;
     gcReport.start = bs.start;
+    //Timing for Analog press
     t = time_us_32();
     return gcReport;
 }
